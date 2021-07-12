@@ -23,9 +23,14 @@ class ViewController: UIViewController {
     let previewLayer = AVCaptureVideoPreviewLayer()
     // shutter button
     private let shutterButton: UIButton = {
-        let button = UIButton(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-        button.layer.cornerRadius = 50
-        button.layer.borderWidth = 10
+        let shutterButtonWidth: Double = 100
+        let shutterButtonCoordinate: Double = 0
+        let cornerRadius: CGFloat = 50
+        let borderWidth: CGFloat = 10
+
+        let button = UIButton(frame: CGRect(x: shutterButtonCoordinate, y: shutterButtonCoordinate, width: shutterButtonWidth, height: shutterButtonWidth))
+        button.layer.cornerRadius = cornerRadius
+        button.layer.borderWidth = borderWidth
         button.layer.borderColor = UIColor.white.cgColor
         return button
     }()
@@ -46,11 +51,13 @@ class ViewController: UIViewController {
     }
     
     override func viewDidLayoutSubviews() {
+        let shutterXCoord: CGFloat = view.frame.size.width/2
+        let shutterYCoord: CGFloat = view.frame.size.height - 100
+
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
         
-        shutterButton.center = CGPoint(x: view.frame.size.width/2,
-                                       y: view.frame.size.height - 100)
+        shutterButton.center = CGPoint(x: shutterXCoord, y: shutterYCoord)
     }
     
     private func checkCameraPermissions() {
@@ -140,6 +147,13 @@ class ViewController: UIViewController {
     
     // adapted from: https://github.com/chrisdanbg/swift-cameraFocus-rectangle/
     @objc func tapToFocus(_ gesture: UITapGestureRecognizer) {
+        let animationDuration: TimeInterval = 1.5
+        let squareWidth: CGFloat = 150
+        let transparent: CGFloat = 0
+        let visible: CGFloat = 1.0
+        // this offset makes the focus box appear under the user's finger
+        let offset: CGFloat = 40
+
         guard let device = AVCaptureDevice.default(for: .video) else { return }
 
         let touchPoint: CGPoint = gesture.location(in: view)
@@ -155,17 +169,17 @@ class ViewController: UIViewController {
             }
         }
         let location = gesture.location(in: view)
-        let x = location.x - 40
-        let y = location.y - 40
-        let lineView = DrawSquare(frame: CGRect(x: x, y: y, width: 150, height: 150))
+        let x = location.x - offset
+        let y = location.y - offset
+        let lineView = DrawSquare(frame: CGRect(x: x, y: y, width: squareWidth, height: squareWidth))
         lineView.backgroundColor = UIColor.clear
-        lineView.alpha = 1.0
+        lineView.alpha = visible
         view.addSubview(lineView)
         
-        DrawSquare.animate(withDuration: 1.5, animations: {
-            lineView.alpha = 0
+        DrawSquare.animate(withDuration: animationDuration, animations: {
+            lineView.alpha = transparent
         }) { (success) in
-            lineView.alpha = 0
+            lineView.alpha = transparent
         }
         
     }
@@ -175,15 +189,16 @@ class ViewController: UIViewController {
 extension ViewController: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error:
         Error?) {
+        let highestQuality: CGFloat = 1.0
+
         // do we need to add jpegDataRepresentation to support iOS 10 and below?
         guard let data = photo.fileDataRepresentation() else {
             return
         }
-//        let image = UIImage(data: data)
 
         if let image = UIImage(data:data) {
             print(image)
-            if let data = image.jpegData(compressionQuality: 1.0) {
+            if let data = image.jpegData(compressionQuality: highestQuality) {
                 let filename = getCachesDirectory().appendingPathComponent("\(UUID().uuidString).jpg")
                 print(filename)
                 try? data.write(to: filename)
@@ -200,20 +215,25 @@ extension ViewController: AVCapturePhotoCaptureDelegate {
         
         session?.stopRunning()
     }
-}
+    
+    class DrawSquare: UIView {
 
-class DrawSquare: UIView {
+        override func draw(_ rect: CGRect) {
+            // these multipliers control how the tap-to-focus square is displayed
+            let coordMultiplier: CGFloat = 0.25
+            let dimensionMultiplier: CGFloat = 0.5
 
-    override func draw(_ rect: CGRect) {
-        let h = rect.height
-        let w = rect.width
-        let color:UIColor = UIColor.white
-        
-        let drect = CGRect(x: (w * 0.25),y: (h * 0.25),width: (w * 0.5),height: (h * 0.5))
-        let bpath:UIBezierPath = UIBezierPath(rect: drect)
-        
-        color.set()
-        bpath.stroke()
+            let h = rect.height
+            let w = rect.width
+            let color:UIColor = UIColor.white
+            
+            let drect = CGRect(x: (w * coordMultiplier), y: (h * coordMultiplier), width: (w * dimensionMultiplier), height: (h * dimensionMultiplier))
+            let bpath:UIBezierPath = UIBezierPath(rect: drect)
+            
+            color.set()
+            bpath.stroke()
+        }
+
     }
-
 }
+
