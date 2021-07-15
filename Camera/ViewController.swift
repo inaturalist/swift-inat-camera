@@ -8,6 +8,7 @@
 import AVFoundation
 import UIKit
 
+@objc(ViewController)
 // adapted from https://www.youtube.com/watch?v=ZYPNXLABf3c
 class ViewController: UIViewController {
     
@@ -23,8 +24,8 @@ class ViewController: UIViewController {
     let previewLayer = AVCaptureVideoPreviewLayer()
     // shutter button
     private let shutterButton: UIButton = {
-        let shutterButtonWidth: Double = 100
-        let shutterButtonCoordinate: Double = 0
+        let shutterButtonWidth: CGFloat = 100
+        let shutterButtonCoordinate: CGFloat = 0
         let cornerRadius: CGFloat = 50
         let borderWidth: CGFloat = 10
 
@@ -51,8 +52,8 @@ class ViewController: UIViewController {
     }
     
     override func viewDidLayoutSubviews() {
-        let shutterXCoord: CGFloat = view.frame.size.width/2
-        let shutterYCoord: CGFloat = view.frame.size.height - 100
+        let shutterXCoord = view.frame.size.width/2
+        let shutterYCoord = view.frame.size.height - 100
 
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
@@ -215,25 +216,24 @@ extension ViewController: AVCapturePhotoCaptureDelegate {
         
         session?.stopRunning()
     }
-    
-    class DrawSquare: UIView {
-
-        override func draw(_ rect: CGRect) {
-            // these multipliers control how the tap-to-focus square is displayed
-            let coordMultiplier: CGFloat = 0.25
-            let dimensionMultiplier: CGFloat = 0.5
-
-            let h = rect.height
-            let w = rect.width
-            let color:UIColor = UIColor.white
-            
-            let drect = CGRect(x: (w * coordMultiplier), y: (h * coordMultiplier), width: (w * dimensionMultiplier), height: (h * dimensionMultiplier))
-            let bpath:UIBezierPath = UIBezierPath(rect: drect)
-            
-            color.set()
-            bpath.stroke()
-        }
-
-    }
 }
 
+class DrawSquare: UIView {
+
+    override func draw(_ rect: CGRect) {
+        // these multipliers control how the tap-to-focus square is displayed
+        let coordMultiplier: CGFloat = 0.25
+        let dimensionMultiplier: CGFloat = 0.5
+
+        let h = rect.height
+        let w = rect.width
+        let color:UIColor = UIColor.white
+        
+        let drect = CGRect(x: (w * coordMultiplier), y: (h * coordMultiplier), width: (w * dimensionMultiplier), height: (h * dimensionMultiplier))
+        let bpath:UIBezierPath = UIBezierPath(rect: drect)
+        
+        color.set()
+        bpath.stroke()
+    }
+
+}
